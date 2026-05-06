@@ -29,8 +29,26 @@ const getTransactionById = (req, res) => {
   res.json(transaction);
 };
 
+// DELETE
+const deleteTransactionById = (req, res) => {
+  const filteredTransactions = transactions.filter(
+    (transaction) => transaction.id !== req.params.id
+  );
+
+  if (filteredTransactions.length === transactions.length) {
+    return res.status(404).json({ message: "Not found" });
+  }
+
+  transactions.length = 0;
+  transactions.push(...filteredTransactions);
+
+  res.json({ message: "Deleted successfully" });
+};
+
+
 module.exports = {
   createTransaction,
   getTransactions,
-  getTransactionById
+  getTransactionById,
+  deleteTransactionById
 };
