@@ -45,10 +45,25 @@ const deleteTransactionById = (req, res) => {
   res.json({ message: "Deleted successfully" });
 };
 
+//UPDATE
+const putUpdateTransaction = (req, res) => {
+  const transaction = transactions.find(
+    (transaction) => transaction.id === req.params.id
+  );
+
+  if (!transaction) {
+    return res.status(404).json({ message: "Not found" });
+  }
+
+  Object.assign(transaction, req.body);
+
+  res.json(transaction);
+};
 
 module.exports = {
   createTransaction,
   getTransactions,
   getTransactionById,
-  deleteTransactionById
+  deleteTransactionById,
+  putUpdateTransaction
 };
