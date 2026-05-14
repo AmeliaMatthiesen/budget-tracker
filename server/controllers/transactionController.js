@@ -1,4 +1,3 @@
-const transactions = require("../models/transactionModel");
 const pool = require("../db");
 
 // CREATE
