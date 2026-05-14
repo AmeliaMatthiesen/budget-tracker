@@ -1,64 +1,69 @@
 const transactions = require("../models/transactionModel");
+const pool = require("../db");
 
 // CREATE
-const createTransaction = (req, res) => {
-  const newTransaction = {
-    id: Date.now().toString(),
-    ...req.body
-  };
+const createTransaction = async (req, res) => {
+  const { amount, type } = req.body;
 
-  transactions.push(newTransaction);
-  res.status(201).json(newTransaction);
+  const result = await pool.query(
+    "INSERT INTO transactions (amount, type) VALUES ($1, $2) RETURNING *",
+    [amount, type]
+  );
+
+  res.status(201).json(result.rows[0]);
 };
 
 // GET ALL
-const getTransactions = (req, res) => {
-  res.json(transactions);
+const getTransactions = async (req, res) => {
+  const result = await pool.query("SELECT * FROM transactions");
+
+  res.json(result.rows);
 };
 
 // GET ONE
-const getTransactionById = (req, res) => {
-  const transaction = transactions.find(
-    (transaction) => transaction.id === req.params.id
+const getTransactionById = async (req, res) => {
+  const result = await pool.query(
+    "SELECT * FROM transactions WHERE id = $1",
+    [req.params.id]
   );
 
-  if (!transaction) {
+  if (result.rows.length === 0) {
     return res.status(404).json({ message: "Not found" });
   }
 
-  res.json(transaction);
+  res.json(result.rows[0]);
+};
+
+//UPDATE
+const putUpdateTransaction = async (req, res) => {
+  const { amount, type } = req.body;
+
+  const results = await pool.query(
+    "UPDATE transactions SET amount = $1, type = $2 WHERE id = $3 RETURNING *",
+    [amount, type, req.params.id]
+  );
+
+  if (results.rows.length === 0) {
+    return res.status(404).json({ message: "Not found" });
+  }
+
+  res.json(results.rows[0]);
 };
 
 // DELETE
-const deleteTransactionById = (req, res) => {
-  const filteredTransactions = transactions.filter(
-    (transaction) => transaction.id !== req.params.id
+const deleteTransactionById = async (req, res) => {
+  const result = await pool.query(
+    "DELETE FROM transactions WHERE id = $1 RETURNING *",
+    [req.params.id]
   );
 
-  if (filteredTransactions.length === transactions.length) {
+  if (result.rows.length === 0) {
     return res.status(404).json({ message: "Not found" });
   }
-
-  transactions.length = 0;
-  transactions.push(...filteredTransactions);
 
   res.json({ message: "Deleted successfully" });
 };
 
-//UPDATE
-const putUpdateTransaction = (req, res) => {
-  const transaction = transactions.find(
-    (transaction) => transaction.id === req.params.id
-  );
-
-  if (!transaction) {
-    return res.status(404).json({ message: "Not found" });
-  }
-
-  Object.assign(transaction, req.body);
-
-  res.json(transaction);
-};
 
 module.exports = {
   createTransaction,
