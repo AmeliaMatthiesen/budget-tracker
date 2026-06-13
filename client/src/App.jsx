@@ -4,16 +4,43 @@ function App() {
   const [transactions, setTransactions] = useState([]);
   const [amount, setAmount] = useState("");
   const [type, setType] = useState("");
+  const [error, settError] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:5000/transactions")
-      .then((response) => response.json())
-      .then((data) => setTransactions(data));
+    fetchTransactions();
   }, []);
 
-  const handleSubmit = () => {
-    console.log(amount);
-    console.log(type);
+  const fetchTransactions = async () => {
+    const response = await fetch("http://localhost:5000/transactions");
+    const data = await response.json(); 
+
+    setTransactions(data);
+  };
+
+  const handleSubmit = async() => {
+    if (!amount || !type) {
+      settError("Please fill in all fields")
+      return;
+    }
+
+    settError("");
+
+    const transaction = {
+      amount,
+      type,
+    }
+
+    await fetch("http://localhost:5000/transactions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(transaction),
+    });
+
+    await fetchTransactions();
+    setAmount("");
+    setType("");
   };
 
   return (
@@ -25,6 +52,7 @@ function App() {
         </p>
       ))}
       <h2>Add Transaction</h2>
+      {error && <p>{error}</p>}
       <input
         type="number"
         value={amount}
