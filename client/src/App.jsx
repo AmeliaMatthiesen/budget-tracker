@@ -5,6 +5,7 @@ function App() {
   const [amount, setAmount] = useState("");
   const [type, setType] = useState("");
   const [error, settError] = useState("");
+  const [success, settSuccess] = useState("");
 
   useEffect(() => {
     fetchTransactions();
@@ -12,14 +13,19 @@ function App() {
 
   const fetchTransactions = async () => {
     const response = await fetch("http://localhost:5000/transactions");
-    const data = await response.json(); 
+    const data = await response.json();
 
     setTransactions(data);
   };
 
-  const handleSubmit = async() => {
+  const handleSubmit = async () => {
     if (!amount || !type) {
-      settError("Please fill in all fields")
+      settError("Please fill in all fields");
+      return;
+    }
+
+    if (type === "expense" && Number(amount) >  balance) {
+      settError("Insufficient funds");
       return;
     }
 
@@ -28,7 +34,7 @@ function App() {
     const transaction = {
       amount,
       type,
-    }
+    };
 
     await fetch("http://localhost:5000/transactions", {
       method: "POST",
@@ -41,18 +47,48 @@ function App() {
     await fetchTransactions();
     setAmount("");
     setType("");
+
+    settSuccess("Transaction added successfully");
   };
+
+  const incomeTransactions = transactions.filter(
+    (transaction) => transaction.type === "income",
+  );
+
+  const incomeTotal = incomeTransactions.reduce(
+    (total, transaction) => total + Number(transaction.amount),
+    0,
+  );
+
+  const expenseTransactions = transactions.filter(
+    (transaction) => transaction.type === "expense",
+  );
+
+  const expenseTotal = expenseTransactions.reduce(
+    (total, transaction) => total + Number(transaction.amount),
+    0,
+  );
+
+  const balance = incomeTotal - expenseTotal;
 
   return (
     <>
       <h1>Budget Tracker</h1>
+      <h2>Current Balance</h2>
+      <p>{balance}</p>
       {transactions.map((transaction) => (
-        <p key={transaction.id}>
+        <p
+          key={transaction.id}
+          style={{
+            color: transaction.type === "income" ? "green" : "red",
+          }}
+        >
           {transaction.type} - {transaction.amount}
         </p>
       ))}
       <h2>Add Transaction</h2>
       {error && <p>{error}</p>}
+      {success && <p>{success}</p>}
       <input
         type="number"
         value={amount}
