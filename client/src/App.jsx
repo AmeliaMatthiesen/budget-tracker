@@ -24,11 +24,10 @@ function App() {
       return;
     }
 
-    if (type === "expense" && Number(amount) >  balance) {
+    if (type === "expense" && Number(amount) > balance) {
       settError("Insufficient funds");
       return;
     }
-
     settError("");
 
     const transaction = {
@@ -50,6 +49,14 @@ function App() {
 
     settSuccess("Transaction added successfully");
   };
+
+  const handleDelete = async (id) => {
+      await fetch(`http://localhost:5000/transactions/${id}`, {
+        method: "DELETE",
+      });
+      await fetchTransactions();
+      settSuccess("Transaction deleted successfully");
+    };
 
   const incomeTransactions = transactions.filter(
     (transaction) => transaction.type === "income",
@@ -77,14 +84,17 @@ function App() {
       <h2>Current Balance</h2>
       <p>{balance}</p>
       {transactions.map((transaction) => (
-        <p
+        <div
           key={transaction.id}
           style={{
             color: transaction.type === "income" ? "green" : "red",
           }}
         >
-          {transaction.type} - {transaction.amount}
-        </p>
+          <p>
+            {transaction.type} - {transaction.amount}
+          </p>
+          <button onClick={() => handleDelete(transaction.id)}>Delete</button>
+        </div>
       ))}
       <h2>Add Transaction</h2>
       {error && <p>{error}</p>}
@@ -102,6 +112,6 @@ function App() {
       <button onClick={handleSubmit}>Add Transaction</button>
     </>
   );
-}
+};
 
 export default App;
